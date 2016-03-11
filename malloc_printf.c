@@ -7,7 +7,8 @@ typedef struct block_header {
 } header;
 
 size_t memsize;//Taille memoire a recuperer en ligne de commande
-header * base_heap;//La ou on a commence à stocker notre memoire
+header * base_heap;//La ou on a commence ï¿½ stocker notre memoire
+header * top_heap;
 size_t memloc;//La memoire allouee actuelle
 header *last;//Le dernier header encode
 
@@ -15,20 +16,21 @@ void* mymalloc(size_t size) {
   if (base_heap == NULL) {//Si base_heap est null, on est au premier appel, initialisons
     printf("Initialisation de la heap\n");
     base_heap = sbrk(0);
-    sbrk(memsize);
+    top_heap = sbrk(memsize);
+	printf("base : %p, top : %p\n", base_heap, top_heap);
     last=base_heap;
   }
-  
-  if (size == 0)//Si la taille demandée vaut 0, renvoyons NULL
+
+  if (size == 0)//Si la taille demandï¿½e vaut 0, renvoyons NULL
     return NULL;
   size = size + (sizeof(size_t) - 1)/2 & ~(sizeof(size_t) - 1)/2; //Calcule la taille pour l'aligner sur 32 bits.
   printf("Taille demandee : %zu\n", size);
   if (memloc < size)//Si y'a plus de place, on renvoie NULL
     return NULL;
-  header * temp = base_heap;//On part du début de la pile
+  header * temp = base_heap;//On part du dï¿½but de la pile
    printf("Avant while : taille=%zu et alloc=%zu\n", temp->size, temp->alloc);
   while (temp->alloc != 0 || temp->size < size) {
-    if(memsize==memloc){//On est à la première itération, créons le header
+    if(memsize==memloc){//On est ï¿½ la premiï¿½re itï¿½ration, crï¿½ons le header
       printf("Premier !\n");
       header * first = base_heap;
       first->size = size;
@@ -36,14 +38,14 @@ void* mymalloc(size_t size) {
       memloc-=size;
       return first+4;
     }
-    if(temp>=sbrk(0))//On est alles trop loin, impossible de trouver un espace memoire satisfaisant
+    if(temp>=top_heap)//On est alles trop loin, impossible de trouver un espace memoire satisfaisant
       return NULL;
-    if(temp>=last){//On est au dernier header et on a pas trouvé de place
+    if(temp>=last){//On est au dernier header et on a pas trouvï¿½ de place
       printf("Fin des headers, creation d'un nouveau\n");
-      header * next = temp+4+temp->size;//Créons un nouveau header
-      next->size=size; //Et allouons-lui la mémoire
+      header * next = temp+4+temp->size;//Crï¿½ons un nouveau header
+      next->size=size; //Et allouons-lui la mï¿½moire
       next->alloc=1;
-      last=next; //Mettre à jour la fin des headers
+      last=next; //Mettre ï¿½ jour la fin des headers
       memloc-=size;
       return next+4;
     }

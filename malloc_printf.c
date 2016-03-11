@@ -22,7 +22,7 @@ void* mymalloc(size_t size) {
   if (size == 0)//Si la taille demandée vaut 0, renvoyons NULL
     return NULL;
   size = size + (sizeof(size_t) - 1)/2 & ~(sizeof(size_t) - 1)/2; //Calcule la taille pour l'aligner sur 32 bits.
-  printf("Taille demandée : %zu\n", size);
+  printf("Taille demandee : %zu\n", size);
   if (memloc < size)//Si y'a plus de place, on renvoie NULL
     return NULL;
   header * temp = base_heap;//On part du début de la pile
@@ -39,7 +39,7 @@ void* mymalloc(size_t size) {
     if(temp>=sbrk(0))//On est alles trop loin, impossible de trouver un espace memoire satisfaisant
       return NULL;
     if(temp>=last){//On est au dernier header et on a pas trouvé de place
-      printf("Fin des headers, création d'un nouveau\n");
+      printf("Fin des headers, creation d'un nouveau\n");
       header * next = temp+4+temp->size;//Créons un nouveau header
       next->size=size; //Et allouons-lui la mémoire
       next->alloc=1;
@@ -79,15 +79,15 @@ int main(int argc, char const *argv[]) {
   char * memOne = mymalloc(5);
   printf("Test");
   myfree(memOne);
-  printf("Deuxième malloc de 5 :\n");
+  printf("Deuxieme malloc de 5 :\n");
   char * memTwo = mymalloc(5);
-  printf("Troisième malloc de 1 (free juste après) :\n");
+  printf("Troisieme malloc de 1 (free juste apres) :\n");
   char * memThree = mymalloc(1);
   myfree(memThree);
-  printf("Quatrième malloc de 1 :\n");
+  printf("Quatrieme malloc de 1 :\n");
   char * memFour = mymalloc(1);
   memFour[0]='h';
-  printf("Cinquième malloc de 1 :\n");
+  printf("Cinquieme malloc de 1 :\n");
   char * memFive = mymalloc(1);
   printf("Fin des appels\n");
   printf("Pointeur 1 = %p\n", memOne);

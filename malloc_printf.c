@@ -89,7 +89,7 @@ void* mymalloc(size_t size) {
     size = aligned_size + 4;
   } else {
 	size = aligned_size;
-} // Version pas plateforme dépendant et sans divisions
+  } // Version pas plateforme dépendant et sans divisions
   printf("Taille demandee : %zu\n", size);
 
   if (memloc < size)//Si y'a plus de place, on renvoie NULL
@@ -104,7 +104,13 @@ void* mymalloc(size_t size) {
  */
 void* mycalloc(size_t size) {
   int* ptr = (int *) mymalloc(size);
-  size = size + (sizeof(size_t) - 1)/2 & ~(sizeof(size_t) - 1)/2;
+  //size = size + (sizeof(size_t) - 1)/2 & ~(sizeof(size_t) - 1)/2;
+  size_t aligned_size = size - (size % 4);
+  if (aligned_size < size) {
+    size = aligned_size + 4;
+  } else {
+	size = aligned_size;
+  } // Version pas plateforme dépendant et sans divisions
   int i;
   for (i = 0; i < size; i++) {
     *(ptr+i) = 0;

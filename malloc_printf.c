@@ -7,23 +7,23 @@ typedef struct block_header {
 } header;
 
 size_t memsize;//Taille memoire a recuperer en ligne de commande
-header * base_heap;//La ou on a commence � stocker notre memoire
-header * top_heap;//Le maximum de la heap (probleme sous mac)
+header * base_heap;//La ou on a commence a stocker notre memoire
+header * top_heap;//Le maximum de la heap (probleme sous mac, inutilise pour l'instant
 size_t memloc;//La memoire allouee actuelle
 header *last;//Le dernier header encode
 
 /**
- * - Fonction d'aide � mymalloc -
- *@pre :  Prend en argument une taille � allouer dans la m�moire
+ * - Fonction d'aide a mymalloc -
+ *@pre :  Prend en argument une taille a allouer dans la memoire
  *@post : Retourne le premier pointeur permettant de contenir cette taille,
- *        s�pare les blocs s'ils sont trop grands
+ *        separe les blocs s'ils sont trop grands
  */
 void* bestAlloc(size_t size){
-  header * temp = base_heap;//On part du d�but de la pile
+  header * temp = base_heap;//On part du debut de la pile
    printf("Avant while : taille=%i et alloc=%i\n", temp->size, temp->alloc);
 
   while (temp->alloc != 0 || temp->size < size) {
-    if(memsize==memloc){//On est � la premi�re it�ration, cr�ons le header
+    if(memsize==memloc){//On est a la premiere iteration, creons le header
       printf("Premier !\n");
       header * first = base_heap;
       first->size = size;
@@ -31,14 +31,14 @@ void* bestAlloc(size_t size){
       memloc-=size+sizeof(header);//On supprime ce qu'on vient d'allouer de ce qu'il reste de m�more
       return first+sizeof(header);
     }
-    //if(temp>=sbrk(0))//On est alles trop loin, impossible de trouver un espace memoire satisfaisant Pose toujours probl�me
+    //if(temp>=sbrk(0))//On est alles trop loin, impossible de trouver un espace memoire satisfaisant Pose toujours probleme
 	//return NULL;
     if(temp>=last){//On est au dernier header et on a pas trouve de place
       printf("Fin des headers, creation d'un nouveau\n");
-      header * next = temp+sizeof(header)+temp->size;//Cr�ons un nouveau header
-      next->size=size; //Et allouons-lui la m�moire
+      header * next = temp+sizeof(header)+temp->size;//Creons un nouveau header
+      next->size=size; //Et allouons-lui la memoire
       next->alloc=1;
-      last=next; //Mettre � jour la fin des headers
+      last=next; //Mettre a jour la fin des headers
       memloc-=size+sizeof(header);
       return next+sizeof(header);
     }
@@ -57,7 +57,7 @@ void* bestAlloc(size_t size){
     split->size= beforeSplit-sizeof(header)-size;
     printf("Adresse nouveau header : %p, taille : %i\n", split, split->size);
     split->alloc=0;
-    if(temp==last)//Si on �tait sur le dernier, update
+    if(temp==last)//Si on etait sur le dernier, update
       last=split;
     return temp+sizeof(header);
   }
@@ -70,7 +70,7 @@ void* bestAlloc(size_t size){
 
 /**
  *@pre :  -
- *@post : Renvoie un pointeur vers un espace m�moire de la taille demand�e
+ *@post : Renvoie un pointeur vers un espace memoire de la taille demand�e
  */
 void* mymalloc(size_t size) {
   if (base_heap == NULL) {//Si base_heap est null, on est au premier appel, initialisons
@@ -83,7 +83,6 @@ void* mymalloc(size_t size) {
   if (size == 0)//Si la taille demand�e vaut 0, renvoyons NULL
     return NULL;
 
-  //size = size + (sizeof(size_t) - 1)/2 & ~(sizeof(size_t) - 1)/2; //Calcule la taille pour l'aligner sur 32 bits.
   size_t aligned_size = size - (size % 4);
   if (aligned_size < size) {
     size = aligned_size + 4;
@@ -100,11 +99,10 @@ void* mymalloc(size_t size) {
 
 /**
  *@pre :  -
- *@post : M�me chose que mymalloc, mais initialise toute la m�moire � 0
+ *@post : Meme chose que mymalloc, mais initialise toute la memoire a 0
  */
 void* mycalloc(size_t size) {
   int* ptr = (int *) mymalloc(size);
-  //size = size + (sizeof(size_t) - 1)/2 & ~(sizeof(size_t) - 1)/2;
   size_t aligned_size = size - (size % 4);
   if (aligned_size < size) {
     size = aligned_size + 4;
@@ -119,9 +117,9 @@ void* mycalloc(size_t size) {
 }
 
 /**
- * - Fonction d'aide � myfree -
+ * - Fonction d'aide a myfree -
  *@pre :  -
- *@post : La m�moire est d�fragment�e au maximum
+ *@post : La memoire est defragmentee au maximum
  */
 void defragMemory(){
   header* temp=base_heap;
@@ -140,8 +138,8 @@ void defragMemory(){
 
 /**
  *@pre :  -
- *@post : Le pointeur ptr est d�sallou�,
- *        la m�moire est d�fragment�e au maximim
+ *@post : Le pointeur ptr est desalloue,
+ *        la memoire est defragmentee au maximim
  */
 void myfree(void* ptr) {
   header * head = (header *) ptr-sizeof(header);
@@ -153,14 +151,15 @@ void myfree(void* ptr) {
 int main(int argc, char const *argv[]) {
   memsize = atoi(argv[1]);
   memloc = memsize;
-  printf("Premier malloc de 30(free juste apres) :\n");
+  printf("Premier malloc de 30 :\n");
   char * memOne = mymalloc(30);
-  printf("Test");
+  printf("Free du premier malloc\n");
   myfree(memOne);
   printf("Deuxieme malloc de 5 :\n");
   char * memTwo = mymalloc(5);
-  printf("Troisieme malloc de 1 (free juste apres) :\n");
+  printf("Troisieme malloc de 1 :\n");
   char * memThree = mymalloc(1);
+  printf("Free du troisième malloc :\n");
   myfree(memThree);
   printf("Quatrieme malloc de 1 :\n");
   char * memFour = mymalloc(1);

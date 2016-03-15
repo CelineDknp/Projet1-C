@@ -12,6 +12,58 @@ header * top_heap;
 size_t memloc;//La memoire allouee actuelle
 header *last;//Le dernier header encode
 
+/**
+ * - Fonction d'aide a mymalloc -
+ *@pre :  Prend en argument une taille a allouer dans la memoire
+ *@post : Retourne le premier pointeur permettant de contenir cette taille,
+ *        separe les blocs s'ils sont trop grands
+ */
+void* bestAlloc(size_t size){
+  header * temp = base_heap;//On part du debut de la pile
+  while (temp->alloc != 0 || temp->size < size) {
+    if(memsize==memloc){//On est a la premiere iteration, creons le header
+      header * first = base_heap;
+      first->size = size;
+      first->alloc = 1;
+      memloc-=size+sizeof(header);//On supprime ce qu'on vient d'allouer de ce qu'il reste de m�more
+      return first+sizeof(header);
+    }
+    //if(temp>=sbrk(0))//On est alles trop loin, impossible de trouver un espace memoire satisfaisant Pose toujours probleme
+	//return NULL;
+    if(temp>=last){//On est au dernier header et on a pas trouve de place
+      header * next = temp+sizeof(header)+temp->size;//Creons un nouveau header
+      next->size=size; //Et allouons-lui la memoire
+      next->alloc=1;
+      last=next; //Mettre a jour la fin des headers
+      memloc-=size+sizeof(header);
+      return next+sizeof(header);
+    }
+    temp = temp + sizeof(header) + temp->size;//On avance
+  }
+
+  size_t beforeSplit=temp->size;
+  if((size*2+sizeof(header))<= beforeSplit){//Si l'espace disponible est au moins deux fois plus grand que celui dont on a besoin
+    temp->size = size; //On alloue
+    temp->alloc = 1;
+    memloc -= size+sizeof(header);
+    header* split = temp+sizeof(header)+temp->size;//On split le bloc en deux en cr�ant un nouvel header.
+    split->size= beforeSplit-sizeof(header)-size;
+    split->alloc=0;
+    if(temp==last)//Si on etait sur le dernier, update
+      last=split;
+    return temp+sizeof(header);
+  }
+  else{
+    temp->alloc=1;
+    memloc -= size+sizeof(header);
+    return temp+sizeof(header);
+  }
+}
+
+/**
+ *@pre :  -
+ *@post : Renvoie un pointeur vers un espace memoire de la taille demand�e
+ */
 void* mymalloc(size_t size) {
 	if (base_heap == NULL) {//Si base_heap est null, on est au premier appel, initialisons
 		base_heap = sbrk(0);
@@ -21,51 +73,68 @@ void* mymalloc(size_t size) {
 
 	if (size == 0)//Si la taille demandee vaut 0, renvoyons NULL
 		return NULL;
-	size = size + (sizeof(size_t) - 1)/2 & ~(sizeof(size_t) - 1)/2; //Calcule la taille pour l'aligner sur 32 bits.
+	size_t aligned_size = size - (size % 4);
+  if (aligned_size < size) {
+    size = aligned_size + 4;
+  } else {
+	size = aligned_size;
+  } // Version pas plateforme dépendant et sans divisions
+
 	if (memloc < size)//Si y'a plus de place, on renvoie NULL
 		return NULL;
-	header * temp = base_heap;//On part du d�but de la pile
-	while (temp->alloc != 0 || temp->size < size) {
-		if(memsize==memloc){//On est � la premi�re iteration, creons le header
-			header * first = base_heap;
-			first->size = size;
-			first->alloc = 1;
-			memloc-=size;
-			return first+4;
-		}
-		if(temp>=top_heap)//On est alles trop loin, impossible de trouver un espace memoire satisfaisant Probleme sous Mac ?
-			return NULL;
-		if(temp>=last){//On est au dernier header et on a pas trouve de place
-			header * next = temp+4+temp->size;//Cr�ons un nouveau header
-			next->size=size; //Et allouons-lui la m�moire
-			next->alloc=1;
-			last=next; //Mettre � jour la fin des headers
-			memloc-=size;
-			return next+4;
-		}
-		temp = temp + 4 + temp->size;//On avance
-	}
-	temp->size = size;//Si on est sorti de la boucle, c'est qu'on a trouve une place, allouons-la
-	temp->alloc = 1;
-	memloc -= size;
-	return temp+4;
+
+	return bestAlloc(size);//Cherchons la meilleure allocation
 }
 
+/**
+ *@pre :  -
+ *@post : Meme chose que mymalloc, mais initialise toute la memoire a 0
+ */
 void* mycalloc(size_t size) {
-	int* ptr = (int *) mymalloc(size);
-	size = size + (sizeof(size_t) - 1)/2 & ~(sizeof(size_t) - 1)/2;
-	int i;
-	for (i = 0; i < size; i++) {
-		*(ptr+i) = 0;
-	}
-	return (void *) ptr;
+  int* ptr = (int *) mymalloc(size);
+  size_t aligned_size = size - (size % 4);
+  if (aligned_size < size) {
+    size = aligned_size + 4;
+  } else {
+	size = aligned_size;
+  } // Version pas plateforme dépendant et sans divisions
+  int i;
+  for (i = 0; i < size; i++) {
+    *(ptr+i) = 0;
+  }
+  return (void *) ptr;
 }
 
-void myfree(void* ptr) {
-	header * head = (header *) ptr-4;
-	head->alloc = 0;
-	memloc += head->size;
+/**
+ * - Fonction d'aide a myfree -
+ *@pre :  -
+ *@post : La memoire est defragmentee au maximum
+ */
+void defragMemory(){
+  header* temp=base_heap;
+  while(temp<=last){
+    if(temp->alloc == 0){
+      header* next=temp+sizeof(header)+temp->size;
+      if(next->alloc==0 && next->size !=0){//Si on trouve deux blocs desalloues de suite
+	temp->size+=next->size+sizeof(header); //On ecrase le deuxieme avec le premier
+      }
+    }
+    temp+=temp->size+sizeof(header);
+  }
 }
+
+/**
+ *@pre :  -
+ *@post : Le pointeur ptr est desalloue,
+ *        la memoire est defragmentee au maximim
+ */
+void myfree(void* ptr) {
+  header * head = (header *) ptr-sizeof(header);
+  head->alloc = 0;
+  memloc += head->size;
+  defragMemory();
+}
+
 
 int main(int argc, char const *argv[]) {
 	memsize = atoi(argv[1]);

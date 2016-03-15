@@ -19,53 +19,52 @@ header *last;//Le dernier header encode
  *        separe les blocs s'ils sont trop grands
  */
 void* bestAlloc(size_t size){
-  header * temp = base_heap;//On part du debut de la pile
-   printf("Avant while : taille=%i et alloc=%i\n", temp->size, temp->alloc);
+	header * temp = base_heap;//On part du debut de la pile
+	printf("Avant while : taille=%i et alloc=%i\n", temp->size, temp->alloc);
 
-  while (temp->alloc != 0 || temp->size < size) {
-    if(memsize==memloc){//On est a la premiere iteration, creons le header
-      printf("Premier !\n");
-      header * first = base_heap;
-      first->size = size;
-      first->alloc = 1;
-      memloc-=size+sizeof(header);//On supprime ce qu'on vient d'allouer de ce qu'il reste de m�more
-      return first+sizeof(header);
-    }
-    //if(temp>=sbrk(0))//On est alles trop loin, impossible de trouver un espace memoire satisfaisant Pose toujours probleme
-	//return NULL;
-    if(temp>=last){//On est au dernier header et on a pas trouve de place
-      printf("Fin des headers, creation d'un nouveau\n");
-      header * next = temp+sizeof(header)+temp->size;//Creons un nouveau header
-      next->size=size; //Et allouons-lui la memoire
-      next->alloc=1;
-      last=next; //Mettre a jour la fin des headers
-      memloc-=size+sizeof(header);
-      return next+sizeof(header);
-    }
-    temp = temp + sizeof(header) + temp->size;//On avance
-     printf("Tour de while : taille=%i et alloc=%i\n", temp->size, temp->alloc);
-  }
+	while (temp->alloc != 0 || temp->size < size) {
+		if(memsize==memloc){//On est a la premiere iteration, creons le header
+			printf("Premier !\n");
+			header * first = base_heap;
+			first->size = size;
+			first->alloc = 1;
+			memloc-=size+sizeof(header);//On supprime ce qu'on vient d'allouer de ce qu'il reste de m�more
+			return first+sizeof(header);
+		}
+		//if(temp>=sbrk(0))//On est alles trop loin, impossible de trouver un espace memoire satisfaisant Pose toujours probl�me
+		//return NULL;
+		if(temp>=last){//On est au dernier header et on a pas trouve de place
+			printf("Fin des headers, creation d'un nouveau\n");
+			header * next = temp+sizeof(header)+temp->size;//Cr�ons un nouveau header
+			next->size=size; //Et allouons-lui la m�moire
+			next->alloc=1;
+			last=next; //Mettre a jour la fin des headers
+			memloc-=size+sizeof(header);
+			return next+sizeof(header);
+		}
+		temp = temp + sizeof(header) + temp->size;//On avance
+		printf("Tour de while : taille=%i et alloc=%i\n", temp->size, temp->alloc);
+	}
 
-  size_t beforeSplit=temp->size;
-  printf("Before : %zu, asked : %zu\n", beforeSplit, size);
-  if((size*2+sizeof(header))<= beforeSplit){//Si l'espace disponible est au moins deux fois plus grand que celui dont on a besoin
-    printf("Bloc split !\n");
-    temp->size = size; //On alloue
-    temp->alloc = 1;
-    memloc -= size+sizeof(header);
-    header* split = temp+sizeof(header)+temp->size;//On split le bloc en deux en cr�ant un nouvel header.
-    split->size= beforeSplit-sizeof(header)-size;
-    printf("Adresse nouveau header : %p, taille : %i\n", split, split->size);
-    split->alloc=0;
-    if(temp==last)//Si on etait sur le dernier, update
-      last=split;
-    return temp+sizeof(header);
-  }
-  else{
-    temp->alloc=1;
-    memloc -= size+sizeof(header);
-    return temp+sizeof(header);
-  }
+	size_t beforeSplit=temp->size;
+	printf("Before : %zu, asked : %zu\n", beforeSplit, size);
+	if ((size*2+sizeof(header))<= beforeSplit) {//Si l'espace disponible est au moins deux fois plus grand que celui dont on a besoin
+		printf("Bloc split !\n");
+		temp->size = size; //On alloue
+		temp->alloc = 1;
+		memloc -= size+sizeof(header);
+		header* split = temp+sizeof(header)+temp->size;//On split le bloc en deux en cr�ant un nouvel header.
+		split->size= beforeSplit-sizeof(header)-size;
+		printf("Adresse nouveau header : %p, taille : %i\n", split, split->size);
+		split->alloc=0;
+		if(temp==last)//Si on �tait sur le dernier, update
+			last=split;
+		return temp+sizeof(header);
+	} else {
+		temp->alloc=1;
+		memloc -= size+sizeof(header);
+		return temp+sizeof(header);
+	}
 }
 
 /**
@@ -102,18 +101,20 @@ void* mymalloc(size_t size) {
  *@post : Meme chose que mymalloc, mais initialise toute la memoire a 0
  */
 void* mycalloc(size_t size) {
-  int* ptr = (int *) mymalloc(size);
-  size_t aligned_size = size - (size % 4);
-  if (aligned_size < size) {
-    size = aligned_size + 4;
-  } else {
-	size = aligned_size;
-  } // Version pas plateforme dépendant et sans divisions
-  int i;
-  for (i = 0; i < size; i++) {
-    *(ptr+i) = 0;
-  }
-  return (void *) ptr;
+	char* start = (char *) mymalloc(size);
+	//size = size + (sizeof(size_t) - 1)/2 & ~(sizeof(size_t) - 1)/2;
+	size_t aligned_size = size - (size % 4);
+	if (aligned_size < size) {
+		size = aligned_size + 4;
+	} else {
+		size = aligned_size;
+	} // Version pas plateforme dépendant et sans divisions
+	char* ptr = start;
+	char* end = ptr+size;
+	for (; ptr < end; ptr++) {
+		*ptr = 0;
+	}
+	return (void *) start;
 }
 
 /**
@@ -143,6 +144,10 @@ void defragMemory(){
  */
 void myfree(void* ptr) {
   header * head = (header *) ptr-sizeof(header);
+  if(head->alloc==0 && head->size==0){
+    printf("Je ne sais pas quel pointeur vous voulez liberer, mais il n'a pas ete cree par mymalloc et vous ne devez donc pas utiliser myfree !\n");
+    return;
+  }
   head->alloc = 0;
   memloc += head->size;
   defragMemory();
@@ -150,7 +155,7 @@ void myfree(void* ptr) {
 
 int main(int argc, char const *argv[]) {
   memsize = atoi(argv[1]);
-  memloc = memsize;
+  memloc = memsize;/*
   printf("Premier malloc de 30 :\n");
   char * memOne = mymalloc(30);
   printf("Free du premier malloc\n");
@@ -171,6 +176,9 @@ int main(int argc, char const *argv[]) {
   printf("Pointeur 2 = %p\n", memTwo);
   printf("Pointeur 3 = %p\n", memThree);
   printf("Pointeur 4 = %p\n", memFour);
-  printf("Pointeur 5 = %p\n", memFive);
+  printf("Pointeur 5 = %p\n", memFive);*/
+  printf("Tests de malloc classique :\n");
+  void* ptr = malloc(12);
+  myfree(ptr);
   return 0;
 }

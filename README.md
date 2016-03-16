@@ -1,6 +1,6 @@
 # Projet1-C
 
-## Utilisation
+## Tests de performances
 
 Afin de compiler le programme, il suffit de lancer dans le terminal :
 
@@ -12,7 +12,9 @@ Ensuite lancer les tests de performances en faisant :
 
 où $VAL est la taille que vous souhaitez essayer.
 
-Si vous souhaitez lancer les tests unitaire, il faut compiler avec :
+## Tests unitaires
+
+Si vous souhaitez lancer les tests unitaires, il faut compiler avec :
 
 	$ make tests
 
@@ -20,6 +22,8 @@ Ensuite, vous pouvez lancer les tests avec
 
 	$ ./tests
 
+## Après les tests
+
 Après avoir utilisé ce programme, vous pouvez supprimer tous les fichiers temporaires au moyen de :
-	
+
 	$ make rm

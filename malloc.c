@@ -1,14 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-
-typedef struct block_header {
-	unsigned int size : 29, zero : 2, alloc : 1;
-} header;
+#include <errno.h>
+#include "malloc.h"
 
 size_t memsize;//Taille memoire a recuperer en ligne de commande
 header * base_heap;//La ou on a commence à stocker notre memoire
-header * top_heap;
 size_t memloc;//La memoire allouee actuelle
 header *last;//Le dernier header encode
 
@@ -18,7 +15,7 @@ header *last;//Le dernier header encode
 *@post : Retourne le premier pointeur permettant de contenir cette taille,
 *        separe les blocs s'ils sont trop grands
 */
-void* bestAlloc(size_t size){
+void* bestAlloc(size_t size) {
 	header * temp = base_heap;//On part du debut de la pile
 	while (temp->alloc != 0 || temp->size < size) {
 		if (memsize==memloc) {//On est a la premiere iteration, creons le header
@@ -28,8 +25,6 @@ void* bestAlloc(size_t size){
 			memloc-=size+sizeof(header);//On supprime ce qu'on vient d'allouer de ce qu'il reste de mémore
 			return first+sizeof(header);
 		}
-		//if(temp>=sbrk(0))//On est alles trop loin, impossible de trouver un espace memoire satisfaisant Pose toujours problème
-		//return NULL;
 		if (temp>=last) {//On est au dernier header et on a pas trouve de place
 			header * next = temp+sizeof(header)+temp->size;//Créons un nouveau header
 			next->size=size; //Et allouons-lui la mémoire
@@ -65,7 +60,11 @@ void* bestAlloc(size_t size){
 void* mymalloc(size_t size) {
 	if (base_heap == NULL) {//Si base_heap est null, on est au premier appel, initialisons
 		base_heap = sbrk(0);
-		top_heap = sbrk(memsize);
+		 void * err = sbrk(memsize);
+		 if (err == -1 && errno == ENOMEM) {
+			 fprintf(stderr, "Pas assez de mémoire !\n");
+			 exit(EXIT_FAILURE);
+		 }
 		last=base_heap;
 	}
 	if (size == 0)//Si la taille demandee vaut 0, renvoyons NULL
@@ -88,7 +87,6 @@ void* mymalloc(size_t size) {
 */
 void* mycalloc(size_t size) {
 	char* start = (char *) mymalloc(size);
-	//size = size + (sizeof(size_t) - 1)/2 & ~(sizeof(size_t) - 1)/2;
 	size_t aligned_size = size - (size % 4);
 	if (aligned_size < size) {
 		size = aligned_size + 4;
@@ -108,7 +106,7 @@ void* mycalloc(size_t size) {
 *@pre :  -
 *@post : La memoire est defragmentee au maximum
 */
-void defragMemory(){
+void defragMemory() {
 	header* temp=base_heap;
 	while(temp<=last){
 		if(temp->alloc == 0){

@@ -18,7 +18,7 @@ Si vous souhaitez lancer les tests unitaires, il faut compiler avec :
 
 	$ make tests
 
-Ensuite, vous pouvez lancer les tests avec
+Ensuite, vous pouvez lancer les tests avec :
 
 	$ ./tests
 

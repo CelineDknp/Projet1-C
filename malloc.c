@@ -4,10 +4,10 @@
 #include <errno.h>
 #include "malloc.h"
 
-size_t memsize;//Taille memoire a recuperer en ligne de commande
-header * base_heap;//La ou on a commence à stocker notre memoire
-size_t memloc;//La memoire allouee actuelle
-header *last;//Le dernier header encode
+size_t memsize = 0;//Taille memoire a recuperer en ligne de commande
+header * base_heap = NULL;//La ou on a commence à stocker notre memoire
+size_t memloc = 0;//La memoire allouee actuelle
+header *last = NULL;//Le dernier header encode
 
 /**
 * - Fonction d'aide a mymalloc -

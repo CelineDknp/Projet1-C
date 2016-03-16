@@ -6,7 +6,7 @@ malloc.o: malloc.c
 
 malloc_test.o: malloc_test.c
 	@echo "Building test object"
-	@gcc malloc_test.c -c -o malloc_test.o -I/Users/Seb/local/include
+	@gcc malloc_test.c -c -o malloc_test.o -I$(HOME)/local/include
 
 main.o: main.c
 	@echo "Building main object"
@@ -15,7 +15,7 @@ main.o: main.c
 tests: malloc.o malloc_test.o
 	@echo "Creating test"
 	@echo "Linking objects"
-	@gcc -o tests malloc.o malloc_test.o -lcunit -L/Users/Seb/local/lib
+	@gcc -o tests malloc.o malloc_test.o -lcunit -L$(HOME)/local/lib
 
 malloc: malloc.o main.o
 	@echo "Creating malloc"

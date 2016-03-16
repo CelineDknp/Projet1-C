@@ -9,13 +9,13 @@ extern size_t memloc;
 time_t start, stop;
 
 int main(int argc, char const *argv[]) {
-	memsize = atoll(argv[1]);
+	memsize = atol(argv[1]);
 	memloc = memsize;
 	printf("Début des tests de performance\n");
 	time(&start);
 	printf("Taille allouable : %zu\n", memsize);
-	size_t temp_size;
-	size_t all_size;
+	size_t temp_size = 0;
+	size_t all_size = 0;
 	void * last_pointer;
 	do {
 		temp_size = rand() % 10 + 1;
@@ -36,8 +36,7 @@ int main(int argc, char const *argv[]) {
 			myfree(last_pointer);
 		}
 		last_pointer = ptr;
-		printf("taille alouée : %zu, taille restante : %zu\n", all_size, memsize-all_size);
-		printf("taille logique restante : %zu\n", memloc);
+		printf("Mémoire allouée : %zu \t Mémoire restante : %zu \t Mémoire disponible : %zu\n", all_size, memsize-all_size, memloc);
 	} while(all_size < memsize);
 	time(&stop);
 	double time_of_test = stop-start;

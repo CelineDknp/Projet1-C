@@ -26,7 +26,7 @@ void* bestAlloc(size_t size) {
 			return first+sizeof(header);
 		}
 		if (temp>=last) {//On est au dernier header et on a pas trouve de place
-			header * next = temp+sizeof(header)+temp->size;//Créons un nouveau header
+			header * next = temp+sizeof(header)+temp->size;//Créons un nouveau header	
 			next->size=size; //Et allouons-lui la mémoire
 			next->alloc=1;
 			last=next; //Mettre a jour la fin des headers
@@ -60,6 +60,7 @@ void* bestAlloc(size_t size) {
 void* mymalloc(size_t size) {
 	if (base_heap == NULL) {//Si base_heap est null, on est au premier appel, initialisons
 		base_heap = sbrk(0);
+		
 		 void * err = sbrk(memsize);
 		 if (err == -1 && errno == ENOMEM) {
 			 fprintf(stderr, "Pas assez de mémoire !\n");
@@ -74,9 +75,8 @@ void* mymalloc(size_t size) {
 		size = aligned_size + 4;
 	} else {
 		size = aligned_size;
-	} // Version pas plateforme dépendant et sans divisions
-
-	if (memloc < size)//Si y'a plus de place, on renvoie NULL
+	} // Version pas plateforme dépendant et sans divisions;
+	if (last+size > sbrk(0))//Si y'a plus de place, on renvoie NULL
 		return NULL;
 	return bestAlloc(size);//Cherchons la meilleure allocation
 }

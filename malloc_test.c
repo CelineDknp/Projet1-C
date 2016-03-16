@@ -54,6 +54,13 @@ void test_free_malloc() {
 	free(ptr);
 }
 
+void test_double_free() {
+	void* ptr = mymalloc(4);
+	myfree(ptr);
+	myfree(ptr);
+	CU_ASSERT_PTR_NOT_NULL(ptr);
+}
+
 int setup(void) {
 	memsize = 100;
 	memloc = memsize;
@@ -79,6 +86,7 @@ int main(int argc, char const *argv[]) {
 			(NULL == CU_add_test(pSuite, "Size 0", test_malloc_size_0)) ||
 			(NULL == CU_add_test(pSuite, "Pointeur invalide", test_free_malloc)) ||
 			(NULL == CU_add_test(pSuite, "Test valeur", test_malloc_ajout)) ||
+			(NULL == CU_add_test(pSuite, "Double Free", test_double_free)) ||
 			(NULL == CU_add_test(pSuite, "Test Calloc", callocTest))) {
 		CU_cleanup_registry();
 		return CU_get_error();

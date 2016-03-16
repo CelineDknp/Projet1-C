@@ -130,7 +130,11 @@ void myfree(void* ptr) {
 		return;
 	}
 	header * head = (header *) ptr-sizeof(header);
-	if(head->alloc==0 && head->size==0) {
+	if (head->alloc == 0 && head->size != 0) {
+		fprintf(stderr, "Ce pointeur a déjà été libéré, inutile de le free !\n");
+		return;
+	}
+	if(head->alloc==0 && head->size == 0) {
 		fprintf(stderr, "Je ne sais pas quel pointeur vous voulez liberer, mais il n'a pas ete cree par mymalloc et vous ne devez donc pas utiliser myfree !\n");
 		return;
 	}

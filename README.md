@@ -1,3 +1,17 @@
 # Projet1-C
 
-Noter dans le rapport que top_heap est là car l'appel à sbrk(0) fait seg faulter sous mac alors que pas sous Windows, on ne sait pas pourquoi
+## Utilisation
+
+Afin de compiler le programme, il suffit de lancer dans le terminal :
+$ make
+Ensuite lancer les tests de performances en faisant :
+$ ./malloc $VAL
+où $VAL est la taille que vous souhaitez essayer.
+
+Si vous souhaitez lancer les tests unitaire, il faut compiler avec :
+$ make tests
+Ensuite, vous pouvez lancer les tests avec
+$ ./tests
+
+Après avoir utilisé ce programme, vous pouvez supprimer tous les fichiers temporaires au moyen de :
+$ make rm

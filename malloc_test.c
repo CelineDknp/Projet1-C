@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <CUnit/CUnit.h>
+#include <CUnit/basic.h>
 #include "malloc.h"
 
 extern size_t memsize;
@@ -91,6 +91,7 @@ int main(int argc, char const *argv[]) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
+	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	CU_basic_show_failures(CU_get_failure_list());
 	CU_cleanup_registry();
